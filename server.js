@@ -38,21 +38,7 @@ const SettingSchema = new mongoose.Schema({
 });
 const Setting = mongoose.model("Setting", SettingSchema);
 
-app.get("/api/settings", authMiddleware, async (req, res) => {
-  const all = await Setting.find({ userId: req.user._id });
-  res.json(all);
-});
 
-app.put("/api/settings/:key", authMiddleware, async (req, res) => {
-  const { key } = req.params;
-  const { value } = req.body;
-  const setting = await Setting.findOneAndUpdate(
-    { key, userId: req.user._id },
-    { value },
-    { upsert: true, new: true }
-  );
-  res.json(setting);
-});
 
 // Модель транзакции
 const TransactionSchema = new mongoose.Schema({
@@ -178,6 +164,22 @@ app.put("/api/goals/:id", authMiddleware, async (req, res) => {
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
   await Goal.deleteOne({ _id: req.params.id, userId: req.user._id });
   res.status(204).end();
+});
+
+app.get("/api/settings", authMiddleware, async (req, res) => {
+  const all = await Setting.find({ userId: req.user._id });
+  res.json(all);
+});
+
+app.put("/api/settings/:key", authMiddleware, async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+  const setting = await Setting.findOneAndUpdate(
+    { key, userId: req.user._id },
+    { value },
+    { upsert: true, new: true }
+  );
+  res.json(setting);
 });
 
 // Запуск сервера
