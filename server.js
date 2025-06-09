@@ -156,14 +156,41 @@ app.post("/api/transactions", authMiddleware, async (req, res) => {
   }
 });
 
+// Удаление транзакции по id (кастомному)
+app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Transaction.findOneAndDelete({
+      id: id,
+      userId: req.user._id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    return res.status(204).end();
+  } catch (err) {
+    console.error("Error deleting transaction:", err);
+    return res.status(500).json({ error: "Failed to delete transaction" });
+  }
+});
+
+
+//Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
   res.json(await Goal.find({ userId: req.user._id }));
 });
+
+//
 app.post("/api/goals", authMiddleware, async (req, res) => {
   const goal = new Goal({ ...req.body, userId: req.user._id });
   await goal.save();
   res.status(201).json(goal);
 });
+
+//обновить цель по айди
 app.put("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
     { _id: req.params.id, userId: req.user._id },
@@ -172,16 +199,20 @@ app.put("/api/goals/:id", authMiddleware, async (req, res) => {
   );
   res.json(goal);
 });
+
+//удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
   await Goal.deleteOne({ _id: req.params.id, userId: req.user._id });
   res.status(204).end();
 });
 
+//
 app.get("/api/settings", authMiddleware, async (req, res) => {
   const all = await Setting.find({ userId: req.user._id });
   res.json(all);
 });
 
+//
 app.put("/api/settings/:key", authMiddleware, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
@@ -193,6 +224,7 @@ app.put("/api/settings/:key", authMiddleware, async (req, res) => {
   res.json(setting);
 });
 
+//
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   const { value } = req.body;
   const setting = new Setting({ key: "budgetLimit", value, userId: req.user._id });
