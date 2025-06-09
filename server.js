@@ -192,5 +192,13 @@ app.put("/api/settings/:key", authMiddleware, async (req, res) => {
   res.json(setting);
 });
 
+app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
+  const { value } = req.body;
+  const setting = new Setting({ key: "budgetLimit", value, userId: req.user._id });
+  await setting.save();
+  res.status(201).json(setting);
+});
+
+
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
