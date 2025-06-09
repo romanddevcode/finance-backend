@@ -226,11 +226,53 @@ app.put("/api/settings/:key", authMiddleware, async (req, res) => {
 
 //
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
-  const { value } = req.body;
-  const setting = new Setting({ key: "budgetLimit", value, userId: req.user._id });
-  await setting.save();
-  res.status(201).json(setting);
+  const { limit, isLimitActive } = req.body;
+
+  try {
+    const existing = await Setting.findOne({
+      key: "budgetLimit",
+      userId: req.user._id,
+    });
+
+    if (existing) {
+      existing.value = { limit, isLimitActive };
+      await existing.save();
+      return res.status(200).json(existing);
+    }
+
+    const setting = new Setting({
+      key: "budgetLimit",
+      value: { limit, isLimitActive },
+      userId: req.user._id,
+    });
+
+    await setting.save();
+    res.status(201).json(setting);
+  } catch (err) {
+    console.error("Error saving budget settings:", err);
+    res.status(500).json({ error: "Failed to save budget settings" });
+  }
 });
+
+app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
+  try {
+    const setting = await Setting.findOne({
+      key: "budgetLimit",
+      userId: req.user._id,
+    });
+
+    if (!setting) {
+      return res.status(404).json({ error: "Budget settings not found" });
+    }
+
+    // `value` должен быть объектом с limit и isLimitActive
+    res.status(200).json(setting.value);
+  } catch (err) {
+    console.error("Error fetching budget settings:", err);
+    res.status(500).json({ error: "Failed to fetch budget settings" });
+  }
+});
+
 
 // Вместо app.put — или в дополнение к нему
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
