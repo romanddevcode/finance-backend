@@ -55,11 +55,12 @@ const Transaction = mongoose.model("Transaction", TransactionSchema);
 
 const GoalSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  amount: { type: Number, required: true },
+  targetAmount: { type: Number, required: true }, // теперь это поле приходит с клиента
   currentAmount: { type: Number, default: 0 },
-  deadline: { type: String },
+  progress: { type: Number, default: 0 },         // можно рассчитывать или сохранят
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
+
 
 const Goal = mongoose.model("Goal", GoalSchema);
 
