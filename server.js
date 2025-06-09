@@ -53,6 +53,16 @@ const TransactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model("Transaction", TransactionSchema);
 
+const GoalSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  amount: { type: Number, required: true },
+  currentAmount: { type: Number, default: 0 },
+  deadline: { type: String },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+});
+
+const Goal = mongoose.model("Goal", GoalSchema);
+
 // Middleware для проверки JWT
 const authMiddleware = async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
