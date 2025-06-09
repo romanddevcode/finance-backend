@@ -31,6 +31,29 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
+const SettingSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  value: mongoose.Schema.Types.Mixed,
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+});
+const Setting = mongoose.model("Setting", SettingSchema);
+
+app.get("/api/settings", authMiddleware, async (req, res) => {
+  const all = await Setting.find({ userId: req.user._id });
+  res.json(all);
+});
+
+app.put("/api/settings/:key", authMiddleware, async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+  const setting = await Setting.findOneAndUpdate(
+    { key, userId: req.user._id },
+    { value },
+    { upsert: true, new: true }
+  );
+  res.json(setting);
+});
+
 // Модель транзакции
 const TransactionSchema = new mongoose.Schema({
   id: String,
@@ -134,6 +157,27 @@ app.post("/api/transactions", authMiddleware, async (req, res) => {
     console.error("Error creating transaction:", err);
     res.status(400).json({ error: "Failed to create transaction" });
   }
+});
+
+app.get("/api/goals", authMiddleware, async (req, res) => {
+  res.json(await Goal.find({ userId: req.user._id }));
+});
+app.post("/api/goals", authMiddleware, async (req, res) => {
+  const goal = new Goal({ ...req.body, userId: req.user._id });
+  await goal.save();
+  res.status(201).json(goal);
+});
+app.put("/api/goals/:id", authMiddleware, async (req, res) => {
+  const goal = await Goal.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user._id },
+    req.body,
+    { new: true }
+  );
+  res.json(goal);
+});
+app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
+  await Goal.deleteOne({ _id: req.params.id, userId: req.user._id });
+  res.status(204).end();
 });
 
 // Запуск сервера
