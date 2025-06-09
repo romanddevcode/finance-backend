@@ -200,6 +200,17 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   res.status(201).json(setting);
 });
 
+// Вместо app.put — или в дополнение к нему
+app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
+  const goal = await Goal.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user._id },
+    req.body,
+    { new: true }
+  );
+  res.json(goal);
+});
+
+
 
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
