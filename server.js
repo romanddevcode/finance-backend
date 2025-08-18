@@ -156,6 +156,28 @@ app.post("/api/transactions", authMiddleware, async (req, res) => {
   }
 });
 
+// Удаление транзакции по id (кастомному)
+app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Transaction.findOneAndDelete({
+      id: id,
+      userId: req.user._id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    return res.status(204).end();
+  } catch (err) {
+    console.error("Error deleting transaction:", err);
+    return res.status(500).json({ error: "Failed to delete transaction" });
+  }
+});
+
+//Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
   res.json(await Goal.find({ userId: req.user.id }));
 });
@@ -165,6 +187,8 @@ app.post("/api/goals", authMiddleware, async (req, res) => {
   await goal.save();
   res.status(201).json(goal);
 });
+
+//обновить цель по айди
 app.put("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
     { id: req.params.id, userId: req.user.id },
@@ -173,16 +197,20 @@ app.put("/api/goals/:id", authMiddleware, async (req, res) => {
   );
   res.json(goal);
 });
+
+//удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
   await Goal.deleteOne({ id: req.params.id, userId: req.user.id });
   res.status(204).end();
 });
 
+//
 app.get("/api/settings", authMiddleware, async (req, res) => {
   const all = await Setting.find({ userId: req.user.id });
   res.json(all);
 });
 
+//
 app.put("/api/settings/:key", authMiddleware, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
@@ -192,6 +220,65 @@ app.put("/api/settings/:key", authMiddleware, async (req, res) => {
     { upsert: true, new: true }
   );
   res.json(setting);
+});
+
+//
+app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
+  const { limit, isLimitActive } = req.body;
+
+  try {
+    const existing = await Setting.findOne({
+      key: "budgetLimit",
+      userId: req.user._id,
+    });
+
+    if (existing) {
+      existing.value = { limit, isLimitActive };
+      await existing.save();
+      return res.status(200).json(existing);
+    }
+
+    const setting = new Setting({
+      key: "budgetLimit",
+      value: { limit, isLimitActive },
+      userId: req.user._id,
+    });
+
+    await setting.save();
+    res.status(201).json(setting);
+  } catch (err) {
+    console.error("Error saving budget settings:", err);
+    res.status(500).json({ error: "Failed to save budget settings" });
+  }
+});
+
+app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
+  try {
+    const setting = await Setting.findOne({
+      key: "budgetLimit",
+      userId: req.user._id,
+    });
+
+    if (!setting) {
+      return res.status(404).json({ error: "Budget settings not found" });
+    }
+
+    // `value` должен быть объектом с limit и isLimitActive
+    res.status(200).json(setting.value);
+  } catch (err) {
+    console.error("Error fetching budget settings:", err);
+    res.status(500).json({ error: "Failed to fetch budget settings" });
+  }
+});
+
+// Вместо app.put — или в дополнение к нему
+app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
+  const goal = await Goal.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user._id },
+    req.body,
+    { new: true }
+  );
+  res.json(goal);
 });
 
 // Запуск сервера
