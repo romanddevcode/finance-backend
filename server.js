@@ -3,6 +3,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,10 +34,13 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 const SettingSchema = new mongoose.Schema({
-  key: { type: String, required: true, unique: true },
+  key: { type: String, required: true },
   value: mongoose.Schema.Types.Mixed,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
+
+SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
+
 const Setting = mongoose.model("Setting", SettingSchema);
 
 // Модель транзакции
@@ -44,6 +49,7 @@ const TransactionSchema = new mongoose.Schema({
   amount: Number,
   type: String,
   category: String,
+  currency: String,
   date: String,
   description: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -70,10 +76,12 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log("Decoded token:", { userId: decoded.userId });
     req.user = await User.findById(decoded.userId);
     if (!req.user) {
       return res.status(401).json({ error: "Invalid token" });
     }
+    console.log("Authenticated user:", { userId: req.user.id });
     next();
   } catch (err) {
     res.status(401).json({ error: "Invalid token" });
@@ -97,10 +105,10 @@ app.post("/api/register", async (req, res) => {
     const user = new User({ email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: "1h",
     });
-    res.status(201).json({ token, user: { id: user._id, email } });
+    res.status(201).json({ token, user: { id: user.id, email } });
   } catch (err) {
     console.error("Registration error:", err);
     res.status(500).json({ error: "Failed to register" });
@@ -120,10 +128,10 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: "1h",
     });
-    res.json({ token, user: { id: user._id, email } });
+    res.json({ token, user: { id: user.id, email } });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Failed to login" });
@@ -133,7 +141,7 @@ app.post("/api/login", async (req, res) => {
 // Получение всех транзакций (только для авторизованного пользователя)
 app.get("/api/transactions", authMiddleware, async (req, res) => {
   try {
-    const all = await Transaction.find({ userId: req.user._id });
+    const all = await Transaction.find({ userId: req.user.id });
     res.json(all);
   } catch (err) {
     console.error("Error fetching transactions:", err);
@@ -144,7 +152,7 @@ app.get("/api/transactions", authMiddleware, async (req, res) => {
 // Создание новой транзакции (только для авторизованного пользователя)
 app.post("/api/transactions", authMiddleware, async (req, res) => {
   try {
-    const tx = new Transaction({ ...req.body, userId: req.user._id });
+    const tx = new Transaction({ ...req.body, userId: req.user.id });
     await tx.save();
     res.status(201).json(tx);
   } catch (err) {
@@ -160,7 +168,7 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
 
     const deleted = await Transaction.findOneAndDelete({
       id: id,
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     if (!deleted) {
@@ -176,12 +184,11 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
 
 //Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
-  res.json(await Goal.find({ userId: req.user._id }));
+  res.json(await Goal.find({ userId: req.user.id }));
 });
 
-//
 app.post("/api/goals", authMiddleware, async (req, res) => {
-  const goal = new Goal({ ...req.body, userId: req.user._id });
+  const goal = new Goal({ ...req.body, userId: req.user.id });
   await goal.save();
   res.status(201).json(goal);
 });
@@ -189,7 +196,7 @@ app.post("/api/goals", authMiddleware, async (req, res) => {
 //обновить цель по айди
 app.put("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user._id },
+    { id: req.params.id, userId: req.user.id },
     req.body,
     { new: true }
   );
@@ -198,7 +205,7 @@ app.put("/api/goals/:id", authMiddleware, async (req, res) => {
 
 //удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
-  await Goal.deleteOne({ _id: req.params.id, userId: req.user._id });
+  await Goal.deleteOne({ id: req.params.id, userId: req.user.id });
   res.status(204).end();
 });
 
@@ -256,7 +263,7 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
 // Вместо app.put — или в дополнение к нему
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user._id },
+    { _id: req.params.id, userId: req.user.id },
     req.body,
     { new: true }
   );
