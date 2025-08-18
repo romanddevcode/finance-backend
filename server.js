@@ -77,10 +77,12 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log("Decoded token:", { userId: decoded.userId });
     req.user = await User.findById(decoded.userId);
     if (!req.user) {
       return res.status(401).json({ error: "Invalid token" });
     }
+    console.log("Authenticated user:", { userId: req.user.id });
     next();
   } catch (err) {
     res.status(401).json({ error: "Invalid token" });
