@@ -46,6 +46,7 @@ const TransactionSchema = new mongoose.Schema({
   amount: Number,
   type: String,
   category: String,
+  currency: String,
   date: String,
   description: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -163,7 +164,7 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
 
     const deleted = await Transaction.findOneAndDelete({
       id: id,
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     if (!deleted) {
@@ -229,7 +230,7 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   try {
     const existing = await Setting.findOne({
       key: "budgetLimit",
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     if (existing) {
@@ -241,7 +242,7 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
     const setting = new Setting({
       key: "budgetLimit",
       value: { limit, isLimitActive },
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     await setting.save();
@@ -256,7 +257,7 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
   try {
     const setting = await Setting.findOne({
       key: "budgetLimit",
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     if (!setting) {
@@ -274,7 +275,7 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
 // Вместо app.put — или в дополнение к нему
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user._id },
+    { _id: req.params.id, userId: req.user.id },
     req.body,
     { new: true }
   );
