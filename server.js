@@ -36,9 +36,9 @@ const SettingSchema = new mongoose.Schema({
   value: mongoose.Schema.Types.Mixed,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
+SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
+
 const Setting = mongoose.model("Setting", SettingSchema);
-
-
 
 // Модель транзакции
 const TransactionSchema = new mongoose.Schema({
@@ -57,10 +57,9 @@ const GoalSchema = new mongoose.Schema({
   title: { type: String, required: true },
   targetAmount: { type: Number, required: true }, // теперь это поле приходит с клиента
   currentAmount: { type: Number, default: 0 },
-  progress: { type: Number, default: 0 },         // можно рассчитывать или сохранят
+  progress: { type: Number, default: 0 }, // можно рассчитывать или сохранят
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
-
 
 const Goal = mongoose.model("Goal", GoalSchema);
 
@@ -177,7 +176,6 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
   }
 });
 
-
 //Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
   res.json(await Goal.find({ userId: req.user._id }));
@@ -229,25 +227,13 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   const { limit, isLimitActive } = req.body;
 
   try {
-    const existing = await Setting.findOne({
-      key: "budgetLimit",
-      userId: req.user._id,
-    });
+    const setting = await Setting.findOneAndUpdate(
+      { key: "budgetLimit", userId: req.user._id },
+      { value: { limit, isLimitActive } },
+      { new: true, upsert: true } // <- создаст новый, если нет
+    );
 
-    if (existing) {
-      existing.value = { limit, isLimitActive };
-      await existing.save();
-      return res.status(200).json(existing);
-    }
-
-    const setting = new Setting({
-      key: "budgetLimit",
-      value: { limit, isLimitActive },
-      userId: req.user._id,
-    });
-
-    await setting.save();
-    res.status(201).json(setting);
+    res.status(200).json(setting);
   } catch (err) {
     console.error("Error saving budget settings:", err);
     res.status(500).json({ error: "Failed to save budget settings" });
@@ -273,7 +259,6 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
   }
 });
 
-
 // Вместо app.put — или в дополнение к нему
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
@@ -283,8 +268,6 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   );
   res.json(goal);
 });
-
-
 
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
