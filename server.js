@@ -57,6 +57,7 @@ const TransactionSchema = new mongoose.Schema({
 const Transaction = mongoose.model("Transaction", TransactionSchema);
 
 const GoalSchema = new mongoose.Schema({
+  id: { type: String, required: true },
   title: { type: String, required: true },
   targetAmount: { type: Number, required: true }, // теперь это поле приходит с клиента
   currentAmount: { type: Number, default: 0 },
@@ -194,7 +195,7 @@ app.post("/api/goals", authMiddleware, async (req, res) => {
 
 //удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
-  await Goal.deleteOne({ userId: req.user.id });
+  await Goal.deleteOne({ id: req.params.id, userId: req.user.id });
   res.status(204).end();
 });
 
