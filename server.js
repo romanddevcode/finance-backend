@@ -209,47 +209,16 @@ app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
 });
 
 //
-app.get("/api/settings", authMiddleware, async (req, res) => {
-  const all = await Setting.find({ userId: req.user.id });
-  res.json(all);
-});
-
-//
-app.put("/api/settings/:key", authMiddleware, async (req, res) => {
-  const { key } = req.params;
-  const { value } = req.body;
-  const setting = await Setting.findOneAndUpdate(
-    { key, userId: req.user.id },
-    { value },
-    { upsert: true, new: true }
-  );
-  res.json(setting);
-});
-
-//
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   const { limit, isLimitActive } = req.body;
 
   try {
-    const existing = await Setting.findOne({
-      key: "budgetLimit",
-      userId: req.user.id,
-    });
-
-    if (existing) {
-      existing.value = { limit, isLimitActive };
-      await existing.save();
-      return res.status(200).json(existing);
-    }
-
-    const setting = new Setting({
-      key: "budgetLimit",
-      value: { limit, isLimitActive },
-      userId: req.user.id,
-    });
-
-    await setting.save();
-    res.status(201).json(setting);
+    const setting = await Setting.findOneAndUpdate(
+      { key: "budgetLimit", userId: req.user.id },
+      { value: { limit, isLimitActive } },
+      { upsert: true, new: true }
+    );
+    res.status(200).json(setting);
   } catch (err) {
     console.error("Error saving budget settings:", err);
     res.status(500).json({ error: "Failed to save budget settings" });
