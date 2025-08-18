@@ -57,7 +57,7 @@ const GoalSchema = new mongoose.Schema({
   title: { type: String, required: true },
   targetAmount: { type: Number, required: true }, // теперь это поле приходит с клиента
   currentAmount: { type: Number, default: 0 },
-  progress: { type: Number, default: 0 }, // можно рассчитывать или сохранят
+  currency: { type: String, default: "EUR" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 
@@ -188,41 +188,12 @@ app.post("/api/goals", authMiddleware, async (req, res) => {
   res.status(201).json(goal);
 });
 
-//обновить цель по айди
-app.put("/api/goals/:id", authMiddleware, async (req, res) => {
-  const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user._id },
-    req.body,
-    { new: true }
-  );
-  res.json(goal);
-});
-
 //удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
   await Goal.deleteOne({ _id: req.params.id, userId: req.user._id });
   res.status(204).end();
 });
 
-//
-app.get("/api/settings", authMiddleware, async (req, res) => {
-  const all = await Setting.find({ userId: req.user._id });
-  res.json(all);
-});
-
-//
-app.put("/api/settings/:key", authMiddleware, async (req, res) => {
-  const { key } = req.params;
-  const { value } = req.body;
-  const setting = await Setting.findOneAndUpdate(
-    { key, userId: req.user._id },
-    { value },
-    { upsert: true, new: true }
-  );
-  res.json(setting);
-});
-
-//
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   const { limit, isLimitActive } = req.body;
 
