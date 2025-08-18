@@ -194,8 +194,17 @@ app.post("/api/goals", authMiddleware, async (req, res) => {
 
 //удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
-  await Goal.deleteOne({ id: req.params.id, userId: req.user.id });
+  await Goal.deleteOne({ userId: req.user.id });
   res.status(204).end();
+});
+
+app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
+  const goal = await Goal.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user.id },
+    req.body,
+    { new: true }
+  );
+  res.json(goal);
 });
 
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
@@ -235,14 +244,6 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
 });
 
 // Вместо app.put — или в дополнение к нему
-app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
-  const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user.id },
-    req.body,
-    { new: true }
-  );
-  res.json(goal);
-});
 
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
