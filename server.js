@@ -201,7 +201,7 @@ app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
 
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user.id },
+    { id: req.params.id, userId: req.user.id },
     req.body,
     { new: true }
   );
@@ -213,7 +213,7 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
 
   try {
     const setting = await Setting.findOneAndUpdate(
-      { key: "budgetLimit", userId: req.user._id },
+      { key: "budgetLimit", userId: req.user.id },
       { value: { limit, isLimitActive } },
       { new: true, upsert: true } // <- создаст новый, если нет
     );
@@ -229,7 +229,7 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
   try {
     const setting = await Setting.findOne({
       key: "budgetLimit",
-      userId: req.user._id,
+      userId: req.user.id,
     });
 
     if (!setting) {
