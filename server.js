@@ -212,38 +212,14 @@ app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
 
 //
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
-  const { limit, isLimitActive } = req.body;
-
-  try {
-    const setting = await Setting.findOneAndUpdate(
-      { key: "budgetLimit", userId: req.user.id },
-      { value: { limit, isLimitActive } },
-      { upsert: true, new: true }
-    );
-    res.status(200).json(setting);
-  } catch (err) {
-    console.error("Error saving budget settings:", err);
-    res.status(500).json({ error: "Failed to save budget settings" });
-  }
-});
-
-app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
-  try {
-    const setting = await Setting.findOne({
-      key: "budgetLimit",
-      userId: req.user.id,
-    });
-
-    if (!setting) {
-      return res.status(404).json({ error: "Budget settings not found" });
-    }
-
-    // `value` должен быть объектом с limit и isLimitActive
-    res.status(200).json(setting.value);
-  } catch (err) {
-    console.error("Error fetching budget settings:", err);
-    res.status(500).json({ error: "Failed to fetch budget settings" });
-  }
+  const { value } = req.body;
+  const setting = new Setting({
+    key: "budgetLimit",
+    value,
+    userId: req.user._id,
+  });
+  await setting.save();
+  res.status(201).json(setting);
 });
 
 // Вместо app.put — или в дополнение к нему
