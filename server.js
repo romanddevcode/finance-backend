@@ -39,6 +39,8 @@ const SettingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 
+SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
+
 const Setting = mongoose.model("Setting", SettingSchema);
 
 // Модель транзакции
