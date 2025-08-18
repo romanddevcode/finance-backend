@@ -39,8 +39,6 @@ const SettingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 
-SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
-
 const Setting = mongoose.model("Setting", SettingSchema);
 
 // Модель транзакции
@@ -216,10 +214,13 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
   const { limit, isLimitActive } = req.body;
 
   try {
-    const existing = await Setting.findOne({
-      key: "budgetLimit",
-      userId: req.user._id,
-    });
+    const existing = await Setting.findOne(
+      {
+        key: "budgetLimit",
+        userId: req.user._id,
+      },
+      { upsert: true, new: true }
+    );
 
     if (existing) {
       existing.value = { limit, isLimitActive };
