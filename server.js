@@ -38,8 +38,6 @@ const SettingSchema = new mongoose.Schema({
 });
 const Setting = mongoose.model("Setting", SettingSchema);
 
-
-
 // Модель транзакции
 const TransactionSchema = new mongoose.Schema({
   id: String,
@@ -57,10 +55,9 @@ const GoalSchema = new mongoose.Schema({
   title: { type: String, required: true },
   targetAmount: { type: Number, required: true }, // теперь это поле приходит с клиента
   currentAmount: { type: Number, default: 0 },
-  progress: { type: Number, default: 0 },         // можно рассчитывать или сохранят
+  progress: { type: Number, default: 0 }, // можно рассчитывать или сохранят
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
-
 
 const Goal = mongoose.model("Goal", GoalSchema);
 
@@ -177,7 +174,6 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
   }
 });
 
-
 //Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
   res.json(await Goal.find({ userId: req.user._id }));
@@ -207,22 +203,6 @@ app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
 });
 
 //
-app.get("/api/settings", authMiddleware, async (req, res) => {
-  const all = await Setting.find({ userId: req.user._id });
-  res.json(all);
-});
-
-//
-app.put("/api/settings/:key", authMiddleware, async (req, res) => {
-  const { key } = req.params;
-  const { value } = req.body;
-  const setting = await Setting.findOneAndUpdate(
-    { key, userId: req.user._id },
-    { value },
-    { upsert: true, new: true }
-  );
-  res.json(setting);
-});
 
 //
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
@@ -273,7 +253,6 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
   }
 });
 
-
 // Вместо app.put — или в дополнение к нему
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
@@ -283,8 +262,6 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   );
   res.json(goal);
 });
-
-
 
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
