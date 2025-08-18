@@ -34,10 +34,11 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 const SettingSchema = new mongoose.Schema({
-  key: { type: String, required: true, unique: true },
+  key: { type: String, required: true },
   value: mongoose.Schema.Types.Mixed,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
+
 const Setting = mongoose.model("Setting", SettingSchema);
 
 // Модель транзакции
