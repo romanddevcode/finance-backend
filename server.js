@@ -205,6 +205,7 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
     req.body,
     { new: true }
   );
+  сonsole.log(goal);
   res.json(goal);
 });
 
