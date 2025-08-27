@@ -35,7 +35,8 @@ const User = mongoose.model("User", UserSchema);
 
 const SettingSchema = new mongoose.Schema({
   key: { type: String, required: true },
-  value: mongoose.Schema.Types.Mixed,
+  value: { type: Number, required: true },
+  isActivated: { type: Boolean, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
