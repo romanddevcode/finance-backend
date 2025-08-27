@@ -210,7 +210,7 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   res.json(goal);
 });
 
-app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
+app.put("/api/budgetsettings:id", authMiddleware, async (req, res) => {
   try {
     const newSettingsLimit = await SettingsLimit.findOneAndUpdate(
       { ...req.body, userId: req.user.id },
@@ -227,8 +227,6 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
 app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
   res.json(await SettingsLimit.find({ userId: req.user.id }));
 });
-
-// Вместо app.put — или в дополнение к нему
 
 // Запуск сервера
 app.listen(PORT, () => console.log(`Server started on ${PORT}`));
