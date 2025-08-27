@@ -33,15 +33,15 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-const SettingSchema = new mongoose.Schema({
+const SettingsLimitSchema = new mongoose.Schema({
   key: { type: String, required: true },
   value: { type: Number, required: true },
   isActivated: { type: Boolean, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
-SettingSchema.index({ userId: 1, key: 1 }, { unique: true });
+SettingsLimitSchema.index({ userId: 1, key: 1 }, { unique: true });
 
-const Setting = mongoose.model("Setting", SettingSchema);
+const SettingsLimit = mongoose.model("Setting", SettingsLimitSchema);
 
 // Модель транзакции
 const TransactionSchema = new mongoose.Schema({
@@ -211,16 +211,13 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
 });
 
 app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
-  const { limit, isLimitActive } = req.body;
-
   try {
-    const setting = await Setting.findOneAndUpdate(
-      { key: "budgetLimit", userId: req.user.id },
-      { value: { limit, isLimitActive } },
-      { new: true, upsert: true } // <- создаст новый, если нет
+    const newSettingsLimit = await SettingsLimit.findOneAndUpdate(
+      { ...req.body, userId: req.user.id },
+      req.body,
+      { new: true, upsert: true }
     );
-
-    res.status(200).json(setting);
+    res.status(200).json(newSettingsLimit);
   } catch (err) {
     console.error("Error saving budget settings:", err);
     res.status(500).json({ error: "Failed to save budget settings" });
@@ -228,22 +225,7 @@ app.post("/api/budgetsettings", authMiddleware, async (req, res) => {
 });
 
 app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
-  try {
-    const setting = await Setting.findOne({
-      key: "budgetLimit",
-      userId: req.user.id,
-    });
-
-    if (!setting) {
-      return res.status(404).json({ error: "Budget settings not found" });
-    }
-
-    // `value` должен быть объектом с limit и isLimitActive
-    res.status(200).json(setting.value);
-  } catch (err) {
-    console.error("Error fetching budget settings:", err);
-    res.status(500).json({ error: "Failed to fetch budget settings" });
-  }
+  res.json(await SettingsLimit.find({ userId: req.user.id }));
 });
 
 // Вместо app.put — или в дополнение к нему
