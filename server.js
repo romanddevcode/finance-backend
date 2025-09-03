@@ -210,10 +210,10 @@ app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   res.json(goal);
 });
 
-app.put("/api/budgetsettings:id", authMiddleware, async (req, res) => {
+app.put("/api/budgetsettings", authMiddleware, async (req, res) => {
   try {
     const newSettingsLimit = await SettingsLimit.findOneAndUpdate(
-      { ...req.body, userId: req.user.id },
+      { userId: req.user.id },
       req.body,
       { new: true, upsert: true }
     );
