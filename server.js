@@ -34,13 +34,13 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 const SettingsLimitSchema = new mongoose.Schema({
-  key: { type: String, required: true },
+  id: { type: String, required: true },
   value: { type: Number, required: true },
   isActivated: { type: Boolean, required: true },
   currency: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
-SettingsLimitSchema.index({ userId: 1, key: 1 }, { unique: true });
+SettingsLimitSchema.index({ userId: 1, id: 1 }, { unique: true });
 
 const SettingsLimit = mongoose.model("Setting", SettingsLimitSchema);
 
