@@ -37,6 +37,7 @@ const SettingsLimitSchema = new mongoose.Schema({
   key: { type: String, required: true },
   value: { type: Number, required: true },
   isActivated: { type: Boolean, required: true },
+  currency: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 SettingsLimitSchema.index({ userId: 1, key: 1 }, { unique: true });
