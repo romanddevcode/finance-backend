@@ -195,29 +195,51 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
 
 //Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
-  res.json(await Goal.find({ userId: req.user.id }));
+  const goals = await Goal.find({ userId: req.user.id }).lean();
+  const formatted = goals.map(g => ({
+    id: g._id,
+    title: g.title,
+    targetAmount: g.targetAmount,
+    currentAmount: g.currentAmount,
+    currency: g.currency,
+  }));
+  res.json(formatted);
 });
 
 app.post("/api/goals", authMiddleware, async (req, res) => {
   const goal = new Goal({ ...req.body, userId: req.user.id });
   await goal.save();
-  res.status(201).json(goal);
+  res.status(201).json({
+    id: goal._id,
+    title: goal.title,
+    targetAmount: goal.targetAmount,
+    currentAmount: goal.currentAmount,
+    currency: goal.currency,
+  });
 });
 
 //удаление цели
 app.delete("/api/goals/:id", authMiddleware, async (req, res) => {
-  await Goal.deleteOne({ id: req.params.id, userId: req.user.id });
+  await Goal.deleteOne({ _id: req.params.id, userId: req.user.id });
   res.status(204).end();
 });
 
+// Обновление цели
 app.patch("/api/goals/:id", authMiddleware, async (req, res) => {
   const goal = await Goal.findOneAndUpdate(
-    { id: req.params.id, userId: req.user.id },
+    { _id: req.params.id, userId: req.user.id },
     req.body,
     { new: true }
   );
-  сonsole.log(goal);
-  res.json(goal);
+  if (!goal) return res.status(404).json({ message: "Goal not found" });
+
+  res.json({
+    id: goal._id,
+    title: goal.title,
+    targetAmount: goal.targetAmount,
+    currentAmount: goal.currentAmount,
+    currency: goal.currency,
+  });
 });
 
 app.put("/api/budgetsettings", authMiddleware, async (req, res) => {
