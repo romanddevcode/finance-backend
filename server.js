@@ -218,7 +218,15 @@ app.put("/api/budgetsettings", authMiddleware, async (req, res) => {
       req.body,
       { new: true, upsert: true }
     );
-    res.status(200).json(newSettingsLimit);
+    
+    const cleaned = {
+      id: updated._id.toString(), 
+      value: updated.value,
+      currency: updated.currency,
+      isActivated: updated.isActivated,
+    };
+
+    res.status(200).json(cleaned);
   } catch (err) {
     console.error("Error saving budget settings:", err);
     res.status(500).json({ error: "Failed to save budget settings" });
@@ -226,7 +234,25 @@ app.put("/api/budgetsettings", authMiddleware, async (req, res) => {
 });
 
 app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
-  res.json(await SettingsLimit.find({ userId: req.user.id }));
+  try {
+    const settings = await SettingsLimit.findOne({ userId: req.user.id });
+
+    if (!settings) {
+      return res.json(null); 
+    }
+
+    const cleaned = {
+      id: settings._id.toString(),
+      value: settings.value,
+      currency: settings.currency,
+      isActivated: settings.isActivated,
+    };
+
+    res.json(cleaned);
+  } catch (err) {
+    console.error("Error fetching budget settings:", err);
+    res.status(500).json({ error: "Failed to fetch budget settings" });
+  }
 });
 
 // Запуск сервера
