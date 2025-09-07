@@ -218,12 +218,17 @@ app.put("/api/budgetsettings", authMiddleware, async (req, res) => {
       req.body,
       { new: true, upsert: true }
     );
-    
+
+    // Если документ вдруг не создался, возвращаем ошибку
+    if (!newSettingsLimit) {
+      return res.status(500).json({ error: "Failed to save budget settings" });
+    }
+
     const cleaned = {
-      id: updated._id.toString(), 
-      value: updated.value,
-      currency: updated.currency,
-      isActivated: updated.isActivated,
+      id: newSettingsLimit._id.toString(),
+      value: newSettingsLimit.value,
+      currency: newSettingsLimit.currency,
+      isActivated: newSettingsLimit.isActivated,
     };
 
     res.status(200).json(cleaned);
