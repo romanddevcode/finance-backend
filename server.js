@@ -177,10 +177,8 @@ app.post("/api/transactions", authMiddleware, async (req, res) => {
 // Удаление транзакции по id (кастомному)
 app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
-
     const deleted = await Transaction.findOneAndDelete({
-      id: id,
+      _id: req.params.id, // ищем по Mongo _id
       userId: req.user.id,
     });
 
@@ -188,10 +186,10 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Transaction not found" });
     }
 
-    return res.status(204).end();
+    res.status(200).json({ id: req.params.id });
   } catch (err) {
     console.error("Error deleting transaction:", err);
-    return res.status(500).json({ error: "Failed to delete transaction" });
+    res.status(500).json({ error: "Failed to delete transaction" });
   }
 });
 
