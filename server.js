@@ -143,8 +143,19 @@ app.post("/api/login", async (req, res) => {
 // Получение всех транзакций (только для авторизованного пользователя)
 app.get("/api/transactions", authMiddleware, async (req, res) => {
   try {
-    const all = await Transaction.find({ userId: req.user.id });
-    res.json(all);
+    const transactions = await Transaction.find({ userId: req.user.id });
+
+    const cleaned = transactions.map(tx => ({
+      id: tx._id.toString(),
+      amount: tx.amount,
+      currency: tx.currency,
+      category: tx.category,
+      type: tx.type,
+      description: tx.description,
+      date: tx.date,
+    }));
+
+    res.status(200).json(cleaned);
   } catch (err) {
     console.error("Error fetching transactions:", err);
     res.status(500).json({ error: "Failed to fetch transactions" });
