@@ -14,8 +14,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
 app.use(cookieParser());
-app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(express.json());
+app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 
 // Подключение к MongoDB
 mongoose
@@ -187,6 +187,7 @@ app.post("/api/login", async (req, res) => {
 
 // Рефреш токена
 app.post("/api/refresh", async (req, res) => {
+  console.log("Refresh token from cookie:", req.cookies.refreshToken);
   try {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if (!refreshToken)
@@ -196,7 +197,6 @@ app.post("/api/refresh", async (req, res) => {
     if (!stored || stored.expiresAt < new Date()) {
       return res.status(401).json({ error: "Refresh token expired" });
     }
-    console.log("Refresh token from cookie:", req.cookies.refreshToken);
 
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(
