@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
@@ -12,6 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
 app.use(cors({credentials: true,  origin: "http://localhost:5173"}));
+app.use(cookieParser());
 app.use(express.json());
 
 // Подключение к MongoDB
@@ -220,10 +222,14 @@ app.post("/api/refresh", async (req, res) => {
 // Логаут
 app.post("/api/logout", async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
       await RefreshToken.deleteOne({ token: refreshToken });
-      res.clearCookie("refreshToken");
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
     }
     res.json({ message: "Logged out" });
   } catch (err) {
