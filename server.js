@@ -233,7 +233,7 @@ app.post("/api/refresh", async (req, res) => {
       return res.status(401).json({ error: "Refresh token expired" });
     }
 
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.userId);
 
     // Удаляем старый refresh и пишем новый
