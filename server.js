@@ -196,6 +196,7 @@ app.post("/api/refresh", async (req, res) => {
     if (!stored || stored.expiresAt < new Date()) {
       return res.status(401).json({ error: "Refresh token expired" });
     }
+    console.log("Refresh token from cookie:", req.cookies.refreshToken);
 
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(
