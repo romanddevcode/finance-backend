@@ -106,48 +106,6 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-
-app.post("/api/register", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ error: "Email and password required" });
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ error: "Email already in use" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ email, password: hashedPassword });
-    await user.save();
-
-    const { accessToken, refreshToken } = generateTokens(user.id);
-
-    // Сохраняем refreshToken в БД
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-
-    // Ставим куку httpOnly
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(201).json({ accessToken, user: { id: user.id, email } });
-  } catch (err) {
-    console.error("Registration error:", err);
-    res.status(500).json({ error: err.message || "Failed to register" });
-  }
-});
-
-// Логин
-
-
 // Регистрация
 app.post("/api/register", async (req, res) => {
   try {
