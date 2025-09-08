@@ -100,7 +100,7 @@ const authMiddleware = async (req, res, next) => {
 };
 
 
-const generateTokens = (userId: string) => {
+const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
   return { accessToken, refreshToken };
