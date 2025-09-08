@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+
 dotenv.config();
 
 const app = express();
@@ -12,7 +13,7 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
-app.use(cors({credentials: true,  origin: "http://localhost:5173"}));
+app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(cookieParser());
 app.use(express.json());
 
@@ -101,10 +102,11 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-
 const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
-  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
+  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, {
+    expiresIn: "7d",
+  });
   return { accessToken, refreshToken };
 };
 
@@ -186,7 +188,8 @@ app.post("/api/login", async (req, res) => {
 app.post("/api/refresh", async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-    if (!refreshToken) return res.status(401).json({ error: "No refresh token" });
+    if (!refreshToken)
+      return res.status(401).json({ error: "No refresh token" });
 
     const stored = await RefreshToken.findOne({ token: refreshToken });
     if (!stored || stored.expiresAt < new Date()) {
@@ -194,7 +197,9 @@ app.post("/api/refresh", async (req, res) => {
     }
 
     const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.userId);
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+      decoded.userId
+    );
 
     // Удаляем старый refresh и пишем новый
     await RefreshToken.deleteOne({ token: refreshToken });
@@ -243,7 +248,7 @@ app.get("/api/transactions", authMiddleware, async (req, res) => {
   try {
     const transactions = await Transaction.find({ userId: req.user.id });
 
-    const cleaned = transactions.map(tx => ({
+    const cleaned = transactions.map((tx) => ({
       id: tx._id.toString(),
       amount: tx.amount,
       currency: tx.currency,
@@ -294,7 +299,7 @@ app.delete("/api/transactions/:id", authMiddleware, async (req, res) => {
 //Получіть цель
 app.get("/api/goals", authMiddleware, async (req, res) => {
   const goals = await Goal.find({ userId: req.user.id }).lean();
-  const formatted = goals.map(g => ({
+  const formatted = goals.map((g) => ({
     id: g._id,
     title: g.title,
     targetAmount: g.targetAmount,
@@ -372,7 +377,7 @@ app.get("/api/budgetsettings", authMiddleware, async (req, res) => {
     const settings = await SettingsLimit.findOne({ userId: req.user.id });
 
     if (!settings) {
-      return res.json(null); 
+      return res.json(null);
     }
 
     const cleaned = {
