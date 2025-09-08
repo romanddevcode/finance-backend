@@ -99,8 +99,6 @@ const authMiddleware = async (req, res, next) => {
 };
 
 
-import { RefreshToken } from "./models/RefreshToken.js"; // твоя схема
-
 const generateTokens = async (userId) => {
   const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: "7d" });
