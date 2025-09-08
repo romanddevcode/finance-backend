@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
-app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(cookieParser());
+app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(express.json());
 
 // Подключение к MongoDB
