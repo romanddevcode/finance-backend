@@ -82,7 +82,7 @@ const GoalSchema = new mongoose.Schema({
 const Goal = mongoose.model("Goal", GoalSchema);
 
 const generateTokens = async (userId) => {
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "15s" });
   const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
