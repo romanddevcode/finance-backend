@@ -8,7 +8,8 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || ""; // Храни в .env
+const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
 app.use(cors());
 app.use(express.json());
