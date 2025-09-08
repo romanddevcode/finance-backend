@@ -139,7 +139,7 @@ app.post("/api/register", async (req, res) => {
     });
 
     res.status(201).json({ accessToken, user: { id: user.id, email } });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Registration error:", err);
     res.status(500).json({ error: err.message || "Failed to register" });
   }
@@ -186,7 +186,7 @@ app.post("/api/register", async (req, res) => {
     });
 
     res.status(201).json({ accessToken, user: { id: user.id, email } });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Registration error:", err);
     res.status(500).json({ error: err.message || "Failed to register" });
   }
