@@ -98,7 +98,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-import jwt from "jsonwebtoken";
+
 import { RefreshToken } from "./models/RefreshToken.js"; // твоя схема
 
 const generateTokens = async (userId) => {
