@@ -121,16 +121,20 @@ app.post("/api/register", async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: "Email already in use" });
-
+    console.log("Incoming register request:", req.body);
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Password hashed:", hashedPassword);
     const user = new User({ email, password: hashedPassword });
+    console.log("User instance:", user);
     await user.save();
+    console.log("User saved successfully");
 
     const { accessToken, refreshToken } = await generateTokens(user.id);
 
     res.status(201).json({ accessToken, refreshToken, user: { id: user.id, email } });
   } catch (err) {
-    res.status(500).json({ error: "Failed to register" });
+    console.error("Registration error:", err);
+  res.status(500).json({ error: err.message || "Failed to register" });
   }
 });
 
