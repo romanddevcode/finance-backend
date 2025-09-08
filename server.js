@@ -146,12 +146,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // Логин
-// Генерация токенов
-const generateTokens = (userId: string) => {
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
-  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
-  return { accessToken, refreshToken };
-};
+
 
 // Регистрация
 app.post("/api/register", async (req, res) => {
