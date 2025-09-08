@@ -33,6 +33,14 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
+const refreshTokenSchema = new mongoose.Schema({
+  token: { type: String, required: true },
+  userId: { type: String, required: true },
+  expiresAt: { type: Date, required: true },
+});
+
+export const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
+
 const SettingsLimitSchema = new mongoose.Schema({
   id: { type: String, required: true },
   value: { type: Number, required: true },
@@ -90,29 +98,40 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+import jwt from "jsonwebtoken";
+import { RefreshToken } from "./models/RefreshToken.js"; // твоя схема
+
+const generateTokens = async (userId) => {
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
+  const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: "7d" });
+
+  // сохраняем refresh в базу
+  await RefreshToken.create({
+    token: refreshToken,
+    userId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 дней
+  });
+
+  return { accessToken, refreshToken };
+};
+
 // Регистрация
 app.post("/api/register", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
-    }
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already in use" });
-    }
+    if (existingUser) return res.status(400).json({ error: "Email already in use" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.status(201).json({ token, user: { id: user.id, email } });
+    const { accessToken, refreshToken } = await generateTokens(user.id);
+
+    res.status(201).json({ accessToken, refreshToken, user: { id: user.id, email } });
   } catch (err) {
-    console.error("Registration error:", err);
     res.status(500).json({ error: "Failed to register" });
   }
 });
@@ -121,23 +140,49 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
-    }
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.json({ token, user: { id: user.id, email } });
+    const { accessToken, refreshToken } = await generateTokens(user.id);
+
+    res.json({ accessToken, refreshToken, user: { id: user.id, email } });
   } catch (err) {
-    console.error("Login error:", err);
     res.status(500).json({ error: "Failed to login" });
   }
+});
+
+app.post("/api/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ error: "No refresh token" });
+
+  try {
+    const stored = await RefreshToken.findOne({ token: refreshToken });
+    if (!stored || stored.expiresAt < new Date()) {
+      return res.status(401).json({ error: "Refresh token expired" });
+    }
+
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(decoded.userId);
+
+    // Удаляем старый refresh и пишем новый
+    await RefreshToken.deleteOne({ token: refreshToken });
+
+    res.json({ accessToken, refreshToken: newRefreshToken });
+  } catch (err) {
+    res.status(401).json({ error: "Invalid refresh token" });
+  }
+});
+
+app.post("/api/logout", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (refreshToken) {
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+  res.json({ message: "Logged out" });
 });
 
 // Получение всех транзакций (только для авторизованного пользователя)
