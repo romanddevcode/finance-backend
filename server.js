@@ -15,7 +15,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "";
 
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
+app.use(cors({ credentials: true, origin: "https://finance-tracker-2-0-nu.vercel.app" }));
 
 // Подключение к MongoDB
 mongoose
